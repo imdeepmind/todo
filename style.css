@@ -92,6 +92,37 @@ body {
     justify-content: center;
 }
 
+.list-header {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+    min-height: 20px;
+}
+
+.clear-all-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    visibility: hidden;
+    transition: color var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.clear-all-btn:hover {
+    color: var(--ifm-color-primary);
+}
+
+.clear-all-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
 #todo-list-container {
     width: 100%;
     max-height: 70vh;
@@ -130,6 +161,7 @@ body {
     justify-content: center;
     width: 20px;
     height: 20px;
+    min-width: 20px;
     cursor: pointer;
 }
 
@@ -156,6 +188,10 @@ body {
     border-color: var(--ifm-color-primary);
 }
 
+.checkbox-container:active .checkmark {
+    transform: scale(0.85);
+}
+
 .checkbox-container input:checked ~ .checkmark {
     background-color: var(--ifm-color-primary);
     border-color: var(--ifm-color-primary);
@@ -164,18 +200,21 @@ body {
 .checkmark:after {
     content: "";
     position: absolute;
-    display: none;
     left: 6px;
     top: 2px;
     width: 5px;
     height: 10px;
     border: solid white;
     border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s;
 }
 
 .checkbox-container input:checked ~ .checkmark:after {
-    display: block;
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
 }
 
 .todo-title {
@@ -234,9 +273,18 @@ body {
     transform: translateX(-50%) scale(1.05);
 }
 
+.add-btn:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+.add-btn:hover svg {
+    transform: rotate(90deg);
+}
+
 .add-btn svg {
     width: 24px;
     height: 24px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Modal Styling */
@@ -247,22 +295,34 @@ body {
     width: 100%;
     height: 100%;
     background-color: var(--modal-overlay);
-    display: none;
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
     align-items: center;
     justify-content: center;
     z-index: 200;
     backdrop-filter: blur(4px);
-    transition: all var(--transition-normal);
+    transition: opacity 0.3s ease, visibility 0.3s;
 }
 
 .modal-overlay.active {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .modal-content {
     width: 100%;
     max-width: 500px;
     padding: 2rem;
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s, opacity 0.4s ease 0.05s;
 }
 
 #todo-input {
@@ -333,10 +393,18 @@ body {
 
 /* Micro-animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(15px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateX(-20px); }
 }
 
 .todo-item {
     animation: fadeIn 0.3s ease-out forwards;
+}
+
+.todo-item.deleting {
+    animation: fadeOut 0.3s ease-in forwards;
 }

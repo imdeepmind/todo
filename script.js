@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const sunIcon = themeToggle.querySelector('.sun-icon');
     const moonIcon = themeToggle.querySelector('.moon-icon');
+    const clearAllBtn = document.getElementById('clear-all-btn');
 
     let todos = JSON.parse(localStorage.getItem('todos')) || [];
     let isDarkMode = localStorage.getItem('theme') === 'dark';
@@ -39,6 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render Todos
     const renderTodos = () => {
         todoList.innerHTML = '';
+        
+        if (todos.length >= 2) {
+            clearAllBtn.classList.add('visible');
+        } else {
+            clearAllBtn.classList.remove('visible');
+        }
         
         if (todos.length === 0) {
             emptyState.classList.add('active');
@@ -104,18 +111,53 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Toggle Checkbox
         if (target.type === 'checkbox') {
-            const index = target.getAttribute('data-index');
-            todos[index].completed = target.checked;
-            renderTodos();
+            const todoItem = target.closest('.todo-item');
+            const currentIndex = Array.from(todoList.children).indexOf(todoItem);
+            
+            if (currentIndex !== -1) {
+                todos[currentIndex].completed = target.checked;
+                
+                // Animate smoothly without re-rendering the entire list
+                if (target.checked) {
+                    todoItem.classList.add('completed');
+                } else {
+                    todoItem.classList.remove('completed');
+                }
+                saveTodos();
+            }
         }
         
         // Delete Button
         const deleteBtn = target.closest('.delete-btn');
         if (deleteBtn) {
-            const index = deleteBtn.getAttribute('data-index');
-            todos.splice(index, 1);
-            renderTodos();
+            const todoItem = deleteBtn.closest('.todo-item');
+            const currentIndex = Array.from(todoList.children).indexOf(todoItem);
+            
+            if (currentIndex !== -1) {
+                // Prevent further interactions during animation
+                todoItem.style.pointerEvents = 'none';
+                todoItem.classList.add('deleting');
+                
+                setTimeout(() => {
+                    todos.splice(currentIndex, 1);
+                    renderTodos();
+                }, 280); // Wait for fadeOut animation
+            }
         }
+    });
+
+    // Clear All Button Logic
+    clearAllBtn.addEventListener('click', () => {
+        const items = document.querySelectorAll('.todo-item');
+        items.forEach(item => {
+            item.style.pointerEvents = 'none';
+            item.classList.add('deleting');
+        });
+        
+        setTimeout(() => {
+            todos = [];
+            renderTodos();
+        }, 280);
     });
 
     // Initial render
