@@ -68,7 +68,28 @@ body {
     opacity: 0.7;
 }
 
-/* Theme Toggle Positioning */
+/* Top Navigation Elements */
+.site-logo-link {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    z-index: 100;
+    display: flex;
+    transition: transform var(--transition-fast);
+}
+
+.site-logo-link:hover {
+    transform: scale(1.05);
+}
+
+.site-logo {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    object-fit: contain;
+    transition: opacity var(--transition-fast);
+}
+
 .theme-toggle {
     position: fixed;
     top: 2rem;
