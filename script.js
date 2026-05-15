@@ -81,7 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const openModal = () => {
         modalOverlay.classList.add('active');
         todoInput.value = '';
-        todoInput.focus();
+        // Use a small timeout to ensure the element is focusable after visibility changes
+        setTimeout(() => {
+            todoInput.focus();
+        }, 50);
     };
 
     const closeModal = () => {
@@ -158,6 +161,40 @@ document.addEventListener('DOMContentLoaded', () => {
             todos = [];
             renderTodos();
         }, 280);
+    });
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Disable shortcuts if modal is open
+        if (modalOverlay.classList.contains('active')) {
+            if (e.key === 'Escape') closeModal();
+            return;
+        }
+
+        // Avoid triggering shortcuts if the user is typing in any input (safety check)
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        const key = e.key.toLowerCase();
+
+        // 'a' - Open Add Task Modal
+        if (key === 'a') {
+            e.preventDefault();
+            openModal();
+        }
+        // 'c' - Clear All Todos
+        else if (key === 'c') {
+            clearAllBtn.click();
+        }
+        // '1'-'9' - Toggle ith Todo
+        else if (key >= '1' && key <= '9') {
+            const index = parseInt(key) - 1;
+            const checkboxes = todoList.querySelectorAll('input[type="checkbox"]');
+            if (checkboxes[index]) {
+                checkboxes[index].click();
+            }
+        }
     });
 
     // Initial render
