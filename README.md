@@ -2,7 +2,7 @@
 
 A minimalist TODO application built with a focus on aesthetics and productivity. Featuring a sleek flat design, smooth micro-animations, and powerful keyboard shortcuts.
 
-[Live Demo](https://imdeepmind.com/todo/)
+[Live Demo](https://todo.imdeepmind.com/)
 
 ## Features
 
