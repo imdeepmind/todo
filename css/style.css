@@ -429,3 +429,32 @@ body {
 .todo-item.deleting {
     animation: fadeOut 0.3s ease-in forwards;
 }
+
+/* Hashtag Chip Styling */
+.hashtag-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    margin: 0 4px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    vertical-align: middle;
+    line-height: 1.4;
+    transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
+    cursor: default;
+}
+
+.hashtag-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Completed Todo Hashtag Adjustments */
+.todo-item.completed .hashtag-chip {
+    opacity: 0.5;
+    box-shadow: none;
+    pointer-events: none;
+}
+

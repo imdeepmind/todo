@@ -37,6 +37,40 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTheme();
     });
 
+    // Convert a word to a deterministic, high-contrast HSL color (One-to-One / Collision-resistant)
+    const stringToColor = (word) => {
+        let hash = 0;
+        for (let i = 0; i < word.length; i++) {
+            hash = word.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        // Map hash to a hue value in [0, 359]
+        const hue = Math.abs(hash) % 360;
+        // Vary saturation (70-85%) and lightness (40-50%) to expand unique color combinations
+        const sat = 70 + (Math.abs(hash >> 3) % 15);
+        const light = 40 + (Math.abs(hash >> 6) % 10);
+        return `hsl(${hue}, ${sat}%, ${light}%)`;
+    };
+
+    // Helper to escape HTML and prevent XSS
+    const escapeHTML = (str) => {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
+    // Parse todo title, escape it, and replace hashtag words with dynamic styled chips
+    const parseTitleWithHashtags = (title) => {
+        const escaped = escapeHTML(title);
+        // Matches '#word' preceded by start of string or whitespace
+        return escaped.replace(/(^|\s)(#([a-zA-Z0-9_-]+))/g, (match, space, hashtag, word) => {
+            const color = stringToColor(word.toLowerCase()); // Case-insensitive color generation
+            return `${space}<span class="hashtag-chip" style="background-color: ${color};">${hashtag}</span>`;
+        });
+    };
+
     // Render Todos
     const renderTodos = () => {
         todoList.innerHTML = '';
@@ -59,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="checkbox" ${todo.completed ? 'checked' : ''} data-index="${index}">
                         <span class="checkmark"></span>
                     </label>
-                    <span class="todo-title">${todo.title}</span>
+                    <span class="todo-title">${parseTitleWithHashtags(todo.title)}</span>
                     <button class="icon-btn delete-btn" data-index="${index}" aria-label="Delete todo">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
