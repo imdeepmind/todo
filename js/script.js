@@ -10,9 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunIcon = themeToggle.querySelector('.sun-icon');
     const moonIcon = themeToggle.querySelector('.moon-icon');
     const clearAllBtn = document.getElementById('clear-all-btn');
+    const tagFiltersContainer = document.getElementById('tag-filters-container');
 
     let todos = JSON.parse(localStorage.getItem('todos')) || [];
     let isDarkMode = localStorage.getItem('theme') === 'dark';
+    let activeFilters = new Set();
 
     // Initialize Theme
     const updateTheme = () => {
@@ -37,6 +39,130 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTheme();
     });
 
+    // Convert a word to a deterministic, high-contrast HSL color (One-to-One / Collision-resistant)
+    const stringToColor = (word) => {
+        let hash = 0;
+        for (let i = 0; i < word.length; i++) {
+            hash = word.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        // Map hash to a hue value in [0, 359]
+        const hue = Math.abs(hash) % 360;
+        // Vary saturation (70-85%) and lightness (40-50%) to expand unique color combinations
+        const sat = 70 + (Math.abs(hash >> 3) % 15);
+        const light = 40 + (Math.abs(hash >> 6) % 10);
+        return `hsl(${hue}, ${sat}%, ${light}%)`;
+    };
+
+    // Generate color configuration for a tag to use as CSS custom properties
+    const getTagColorConfig = (tag) => {
+        let hash = 0;
+        for (let i = 0; i < tag.length; i++) {
+            hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash) % 360;
+        const sat = 70 + (Math.abs(hash >> 3) % 15);
+        const light = 40 + (Math.abs(hash >> 6) % 10);
+        
+        return {
+            color: `hsl(${hue}, ${sat}%, ${light}%)`,
+            inactive: `hsla(${hue}, ${sat}%, ${light}%, 0.08)`,
+            inactiveHover: `hsla(${hue}, ${sat}%, ${light}%, 0.18)`,
+            border: `hsla(${hue}, ${sat}%, ${light}%, 0.3)`,
+            glow: `hsla(${hue}, ${sat}%, ${light}%, 0.35)`
+        };
+    };
+
+    // Helper to escape HTML and prevent XSS
+    const escapeHTML = (str) => {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
+    // Parse todo title, escape it, and replace hashtag words with dynamic styled chips
+    const parseTitleWithHashtags = (title) => {
+        const escaped = escapeHTML(title);
+        // Matches '#word' preceded by start of string or whitespace
+        return escaped.replace(/(^|\s)(#([a-zA-Z0-9_-]+))/g, (match, space, hashtag, word) => {
+            const color = stringToColor(word.toLowerCase()); // Case-insensitive color generation
+            return `${space}<span class="hashtag-chip" style="background-color: ${color};">${hashtag}</span>`;
+        });
+    };
+
+    // Extract unique tags from all todo titles
+    const getUniqueTags = () => {
+        const tags = new Set();
+        todos.forEach(todo => {
+            const matches = todo.title.match(/(?:^|\s)#([a-zA-Z0-9_-]+)/g);
+            if (matches) {
+                matches.forEach(match => {
+                    tags.add(match.trim().toLowerCase().substring(1));
+                });
+            }
+        });
+        return Array.from(tags).sort();
+    };
+
+    // Check if todo matches active filters
+    const matchesFilters = (todo) => {
+        if (activeFilters.size === 0) return true;
+        const matches = todo.title.match(/(?:^|\s)#([a-zA-Z0-9_-]+)/g);
+        if (!matches) return false;
+        const todoTags = matches.map(m => m.trim().toLowerCase().substring(1));
+        return todoTags.some(tag => activeFilters.has(tag));
+    };
+
+    // Update filter UI checkbox list
+    const updateFilters = () => {
+        const uniqueTags = getUniqueTags();
+        
+        // Remove active filters that no longer exist
+        activeFilters.forEach(tag => {
+            if (!uniqueTags.includes(tag)) {
+                activeFilters.delete(tag);
+            }
+        });
+
+        if (uniqueTags.length === 0) {
+            tagFiltersContainer.classList.remove('visible');
+            tagFiltersContainer.innerHTML = '';
+            return;
+        }
+
+        tagFiltersContainer.classList.add('visible');
+
+        // Rebuild filter items to sync checkboxes with activeFilters
+        tagFiltersContainer.innerHTML = uniqueTags.map(tag => {
+            const isChecked = activeFilters.has(tag);
+            const colorConfig = getTagColorConfig(tag);
+            return `
+                <label class="tag-filter-item" style="--tag-bg-color: ${colorConfig.color}; --tag-bg-inactive: ${colorConfig.inactive}; --tag-bg-inactive-hover: ${colorConfig.inactiveHover}; --tag-bg-border: ${colorConfig.border}; --tag-glow-color: ${colorConfig.glow};">
+                    <input type="checkbox" data-tag="${tag}" ${isChecked ? 'checked' : ''}>
+                    <span class="tag-filter-chip">
+                        <span class="tag-filter-checkmark"></span>
+                        <span class="tag-text">#${tag}</span>
+                    </span>
+                </label>
+            `;
+        }).join('');
+    };
+
+    tagFiltersContainer.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target.type === 'checkbox' && target.dataset.tag) {
+            const tag = target.dataset.tag;
+            if (target.checked) {
+                activeFilters.add(tag);
+            } else {
+                activeFilters.delete(tag);
+            }
+            renderTodos();
+        }
+    });
+
     // Render Todos
     const renderTodos = () => {
         todoList.innerHTML = '';
@@ -47,11 +173,22 @@ document.addEventListener('DOMContentLoaded', () => {
             clearAllBtn.classList.remove('visible');
         }
         
-        if (todos.length === 0) {
+        const filteredTodos = todos.filter(matchesFilters);
+        
+        if (filteredTodos.length === 0) {
+            if (todos.length === 0) {
+                emptyState.textContent = 'No tasks for today.';
+            } else {
+                emptyState.textContent = 'No tasks matching selected filters.';
+            }
             emptyState.classList.add('active');
         } else {
             emptyState.classList.remove('active');
             todos.forEach((todo, index) => {
+                if (activeFilters.size > 0 && !matchesFilters(todo)) {
+                    return;
+                }
+                
                 const todoItem = document.createElement('div');
                 todoItem.className = `todo-item ${todo.completed ? 'completed' : ''}`;
                 todoItem.innerHTML = `
@@ -59,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="checkbox" ${todo.completed ? 'checked' : ''} data-index="${index}">
                         <span class="checkmark"></span>
                     </label>
-                    <span class="todo-title">${todo.title}</span>
+                    <span class="todo-title">${parseTitleWithHashtags(todo.title)}</span>
                     <button class="icon-btn delete-btn" data-index="${index}" aria-label="Delete todo">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -98,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = todoInput.value.trim();
         if (title) {
             todos.push({ title, completed: false });
+            updateFilters();
             renderTodos();
             closeModal();
         }
@@ -115,10 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Toggle Checkbox
         if (target.type === 'checkbox') {
             const todoItem = target.closest('.todo-item');
-            const currentIndex = Array.from(todoList.children).indexOf(todoItem);
+            const originalIndex = parseInt(target.dataset.index, 10);
             
-            if (currentIndex !== -1) {
-                todos[currentIndex].completed = target.checked;
+            if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < todos.length) {
+                todos[originalIndex].completed = target.checked;
                 
                 // Animate smoothly without re-rendering the entire list
                 if (target.checked) {
@@ -134,15 +272,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteBtn = target.closest('.delete-btn');
         if (deleteBtn) {
             const todoItem = deleteBtn.closest('.todo-item');
-            const currentIndex = Array.from(todoList.children).indexOf(todoItem);
+            const originalIndex = parseInt(deleteBtn.dataset.index, 10);
             
-            if (currentIndex !== -1) {
+            if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < todos.length) {
                 // Prevent further interactions during animation
                 todoItem.style.pointerEvents = 'none';
                 todoItem.classList.add('deleting');
                 
                 setTimeout(() => {
-                    todos.splice(currentIndex, 1);
+                    todos.splice(originalIndex, 1);
+                    updateFilters();
                     renderTodos();
                 }, 280); // Wait for fadeOut animation
             }
@@ -159,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setTimeout(() => {
             todos = [];
+            updateFilters();
             renderTodos();
         }, 280);
     });
@@ -198,5 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial render
+    updateFilters();
     renderTodos();
 });
