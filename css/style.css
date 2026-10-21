@@ -90,11 +90,14 @@ body {
     transition: opacity var(--transition-fast);
 }
 
-.theme-toggle {
+.nav-actions {
     position: fixed;
     top: 2rem;
     right: 2rem;
     z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .theme-toggle svg {
@@ -113,12 +116,183 @@ body {
     justify-content: center;
 }
 
+/* Top Navigation Folder Button */
+.folder-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* List Header & Active Folder Indicator */
 .list-header {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.5rem;
     min-height: 20px;
+}
+
+.active-folder-indicator {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0;
+    transition: color var(--transition-fast);
+}
+
+.active-folder-indicator:hover {
+    color: var(--text-color);
+}
+
+.active-folder-indicator span {
+    color: var(--text-color);
+}
+
+/* Folders Modal & Small Cards Grid */
+.folders-modal-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.folder-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    max-height: 250px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.folder-cards-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.folder-card {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 72px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+    position: relative;
+    user-select: none;
+}
+
+.folder-card:hover {
+    border-color: var(--text-color);
+    background-color: var(--hover-bg);
+}
+
+.folder-card.active {
+    border-color: var(--ifm-color-primary);
+    background-color: var(--hover-bg);
+}
+
+.folder-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.folder-card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.folder-card-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.folder-card-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--ifm-color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.folder-card-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.folder-card:hover .folder-card-delete {
+    opacity: 0.6;
+}
+
+.folder-card-delete:hover {
+    opacity: 1;
+    color: var(--ifm-color-primary);
+}
+
+.folder-card-delete svg {
+    width: 14px;
+    height: 14px;
+}
+
+.folder-card-stats {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+}
+
+.folder-card.active .folder-card-stats {
+    color: var(--ifm-color-primary);
+}
+
+.create-folder-form {
+    width: 100%;
+}
+
+#create-folder-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border-color);
+    padding: 0.75rem 0;
+    font-size: 1.3rem;
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+#create-folder-input:focus {
+    border-color: var(--ifm-color-primary);
 }
 
 .clear-all-btn {
@@ -270,32 +444,9 @@ body {
     height: 18px;
 }
 
-/* Add Button */
+/* Add Button in Nav */
 .add-btn {
-    position: fixed;
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--ifm-color-primary);
-    color: white;
-    border: none;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color var(--transition-fast), transform var(--transition-fast);
-    z-index: 90;
-}
-
-.add-btn:hover {
-    background-color: var(--ifm-color-primary-dark);
-    transform: translateX(-50%) scale(1.05);
-}
-
-.add-btn:active {
-    transform: translateX(-50%) scale(0.95);
+    color: var(--ifm-color-primary);
 }
 
 .add-btn:hover svg {
@@ -305,7 +456,7 @@ body {
 .add-btn svg {
     width: 24px;
     height: 24px;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Modal Styling */
@@ -344,6 +495,22 @@ body {
     transform: translateY(0) scale(1);
     opacity: 1;
     transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s, opacity 0.4s ease 0.05s;
+}
+
+.modal-folder-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.modal-folder-indicator .folder-badge {
+    color: var(--ifm-color-primary);
 }
 
 #todo-input {
