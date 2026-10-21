@@ -90,11 +90,14 @@ body {
     transition: opacity var(--transition-fast);
 }
 
-.theme-toggle {
+.nav-actions {
     position: fixed;
     top: 2rem;
     right: 2rem;
     z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .theme-toggle svg {
@@ -270,32 +273,9 @@ body {
     height: 18px;
 }
 
-/* Add Button */
+/* Add Button in Nav */
 .add-btn {
-    position: fixed;
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--ifm-color-primary);
-    color: white;
-    border: none;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color var(--transition-fast), transform var(--transition-fast);
-    z-index: 90;
-}
-
-.add-btn:hover {
-    background-color: var(--ifm-color-primary-dark);
-    transform: translateX(-50%) scale(1.05);
-}
-
-.add-btn:active {
-    transform: translateX(-50%) scale(0.95);
+    color: var(--ifm-color-primary);
 }
 
 .add-btn:hover svg {
@@ -305,7 +285,7 @@ body {
 .add-btn svg {
     width: 24px;
     height: 24px;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Modal Styling */
